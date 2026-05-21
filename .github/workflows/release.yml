@@ -146,7 +146,6 @@ jobs:
           PKG_DIR="dist/${{ matrix.name }}"
           mkdir -p "${PKG_DIR}"
           cp "target/${{ matrix.target }}/release/r2n-cli-bin" "${PKG_DIR}/r2n-cli-android-arm64"
-          cp "target/${{ matrix.target }}/release/r2n-cli-bin" "${PKG_DIR}/libr2n-cli-android-arm64.so"
           tar -C dist -czf "dist/r2n-${GITHUB_REF_NAME}-${{ matrix.archive_suffix }}" "${{ matrix.name }}"
 
       - name: Upload packaged artifact
