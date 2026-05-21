@@ -11,6 +11,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   build:
@@ -83,30 +84,25 @@ jobs:
         with:
           key: ${{ matrix.target }}
 
-      - name: Install Android NDK
+      - name: Configure Android toolchain
         if: matrix.android
         shell: bash
         run: |
           set -euo pipefail
-          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
-          if [ -z "${SDK_ROOT}" ]; then
-            echo "ANDROID_SDK_ROOT/ANDROID_HOME is not set" >&2
+          NDK_ROOT="${ANDROID_NDK_ROOT:-${ANDROID_NDK_HOME:-${ANDROID_NDK_LATEST_HOME:-}}}"
+          if [ -z "${NDK_ROOT}" ]; then
+            echo "ANDROID_NDK_ROOT/ANDROID_NDK_HOME/ANDROID_NDK_LATEST_HOME is not set" >&2
             exit 1
           fi
-          SDKMANAGER="${SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
-          if [ ! -x "${SDKMANAGER}" ]; then
-            SDKMANAGER="$(find "${SDK_ROOT}" -path '*/cmdline-tools/*/bin/sdkmanager' | head -n 1)"
-          fi
-          if [ ! -x "${SDKMANAGER}" ]; then
-            echo "sdkmanager not found under ${SDK_ROOT}" >&2
+          TOOLCHAIN_BIN="${NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          if [ ! -x "${TOOLCHAIN_BIN}/aarch64-linux-android21-clang" ]; then
+            echo "Android clang linker not found under ${TOOLCHAIN_BIN}" >&2
             exit 1
           fi
-          yes | "${SDKMANAGER}" --install "ndk;27.2.12479018"
-          NDK_ROOT="${SDK_ROOT}/ndk/27.2.12479018"
           {
             echo "ANDROID_NDK_ROOT=${NDK_ROOT}"
-            echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=${NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang"
-            echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_AR=${NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+            echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=${TOOLCHAIN_BIN}/aarch64-linux-android21-clang"
+            echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_AR=${TOOLCHAIN_BIN}/llvm-ar"
           } >> "${GITHUB_ENV}"
 
       - name: Build desktop/server artifacts
