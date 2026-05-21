@@ -120,6 +120,15 @@ pub struct SupernodeConfig {
     pub log_level: String,
 }
 
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SharedConfigFile {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    edge: Option<EdgeConfig>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    supernode: Option<SupernodeConfig>,
+}
+
 fn default_local_port() -> u16 {
     0
 }
@@ -358,34 +367,19 @@ impl Default for SupernodeConfig {
 
 impl EdgeConfig {
     pub fn get_config_path() -> Option<PathBuf> {
-        if let Some(path) = std::env::var_os("R2N_CONFIG_PATH") {
-            let trimmed = path.to_string_lossy().trim().to_string();
-            if !trimmed.is_empty() {
-                return Some(PathBuf::from(trimmed));
-            }
-        }
-        let mut path = std::env::current_exe().ok()?;
-        path.pop();
-        Some(path.join("config.toml"))
+        default_config_path()
     }
 
     pub fn load(path: &PathBuf) -> Result<Self> {
-        let content = fs::read_to_string(path)
-            .with_context(|| format!("Failed to read config file at {:?}", path))?;
-
-        #[derive(Deserialize)]
-        struct Wrapper {
-            edge: EdgeConfig,
-        }
-
-        if let Ok(wrapper) = toml::from_str::<Wrapper>(&content) {
-            let mut config = wrapper.edge;
-            config.normalize();
-            return Ok(config);
-        }
-
-        let mut config: EdgeConfig = toml::from_str(&content)
-            .with_context(|| format!("Failed to parse TOML from {:?}", path))?;
+        let shared = load_shared_config(path)?;
+        let mut config = if let Some(config) = shared.edge {
+            config
+        } else {
+            let content = fs::read_to_string(path)
+                .with_context(|| format!("Failed to read config file at {:?}", path))?;
+            toml::from_str(&content)
+                .with_context(|| format!("Failed to parse TOML from {:?}", path))?
+        };
         config.normalize();
         Ok(config)
     }
@@ -395,16 +389,9 @@ impl EdgeConfig {
             fs::create_dir_all(parent)
                 .with_context(|| format!("Failed to create config directory at {:?}", parent))?;
         }
-        #[derive(Serialize)]
-        struct Wrapper<'a> {
-            edge: &'a EdgeConfig,
-        }
-        let wrapper = Wrapper { edge: self };
-        let content =
-            toml::to_string_pretty(&wrapper).context("Failed to serialize config to TOML")?;
-        fs::write(path, content)
-            .with_context(|| format!("Failed to write config file to {:?}", path))?;
-        Ok(())
+        let mut shared = load_shared_config_if_present(path)?;
+        shared.edge = Some(self.clone());
+        save_shared_config(path, &shared)
     }
 
     pub fn load_or_create() -> Result<(Self, PathBuf)> {
@@ -442,24 +429,16 @@ impl EdgeConfig {
 
 impl SupernodeConfig {
     pub fn get_config_path() -> Option<PathBuf> {
-        let mut path = std::env::current_exe().ok()?;
-        path.pop();
-        Some(path.join("config.toml"))
+        default_config_path()
     }
 
     pub fn load(path: &PathBuf) -> Result<Self> {
+        let shared = load_shared_config(path)?;
+        if let Some(config) = shared.supernode {
+            return Ok(config);
+        }
         let content = fs::read_to_string(path)
             .with_context(|| format!("Failed to read config file at {:?}", path))?;
-
-        #[derive(Deserialize)]
-        struct Wrapper {
-            supernode: SupernodeConfig,
-        }
-
-        if let Ok(wrapper) = toml::from_str::<Wrapper>(&content) {
-            return Ok(wrapper.supernode);
-        }
-
         let config: SupernodeConfig = toml::from_str(&content)
             .with_context(|| format!("Failed to parse TOML from {:?}", path))?;
         Ok(config)
@@ -470,16 +449,9 @@ impl SupernodeConfig {
             fs::create_dir_all(parent)
                 .with_context(|| format!("Failed to create config directory at {:?}", parent))?;
         }
-        #[derive(Serialize)]
-        struct Wrapper<'a> {
-            supernode: &'a SupernodeConfig,
-        }
-        let wrapper = Wrapper { supernode: self };
-        let content =
-            toml::to_string_pretty(&wrapper).context("Failed to serialize config to TOML")?;
-        fs::write(path, content)
-            .with_context(|| format!("Failed to write config file to {:?}", path))?;
-        Ok(())
+        let mut shared = load_shared_config_if_present(path)?;
+        shared.supernode = Some(self.clone());
+        save_shared_config(path, &shared)
     }
 
     pub fn load_or_create() -> Result<(Self, PathBuf)> {
@@ -494,6 +466,66 @@ impl SupernodeConfig {
             Ok((new_config, path))
         }
     }
+}
+
+fn default_config_path() -> Option<PathBuf> {
+    if let Some(path) = std::env::var_os("R2N_CONFIG_PATH") {
+        let trimmed = path.to_string_lossy().trim().to_string();
+        if !trimmed.is_empty() {
+            return Some(PathBuf::from(trimmed));
+        }
+    }
+    let mut path = std::env::current_exe().ok()?;
+    path.pop();
+    Some(path.join("config.toml"))
+}
+
+fn load_shared_config(path: &PathBuf) -> Result<SharedConfigFile> {
+    let content =
+        fs::read_to_string(path).with_context(|| format!("Failed to read config file at {:?}", path))?;
+    parse_shared_config_content(path, &content)
+}
+
+fn load_shared_config_if_present(path: &PathBuf) -> Result<SharedConfigFile> {
+    if path.exists() {
+        load_shared_config(path)
+    } else {
+        Ok(SharedConfigFile::default())
+    }
+}
+
+fn parse_shared_config_content(path: &PathBuf, content: &str) -> Result<SharedConfigFile> {
+    if let Ok(shared) = toml::from_str::<SharedConfigFile>(content) {
+        return Ok(shared);
+    }
+
+    if let Ok(mut edge) = toml::from_str::<EdgeConfig>(content) {
+        edge.normalize();
+        return Ok(SharedConfigFile {
+            edge: Some(edge),
+            supernode: None,
+        });
+    }
+
+    if let Ok(supernode) = toml::from_str::<SupernodeConfig>(content) {
+        return Ok(SharedConfigFile {
+            edge: None,
+            supernode: Some(supernode),
+        });
+    }
+
+    Err(anyhow::anyhow!(
+        "Failed to parse shared config file at {:?}",
+        path
+    ))
+}
+
+fn save_shared_config(path: &PathBuf, shared: &SharedConfigFile) -> Result<()> {
+    let content =
+        toml::to_string_pretty(shared).context("Failed to serialize shared config to TOML")?;
+    fs::write(path, content)
+        .with_context(|| format!("Failed to write config file to {:?}", path))?;
+    Ok(())
 }
 
 fn serialize_hex<S>(bytes: &[u8; 32], serializer: S) -> Result<S::Ok, S::Error>
@@ -520,6 +552,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
 
     #[test]
     fn edge_config_defaults_virtual_lan_discovery() {
@@ -569,5 +602,45 @@ mod tests {
         assert_eq!(config.backend.mode, BackendMode::Tap);
         assert!(config.backend.desktop_l2_enhanced);
         assert!(!config.virtual_lan.prefer_virtual_interface);
+    }
+
+    #[test]
+    fn edge_and_supernode_save_merge_into_shared_file() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("config.toml");
+
+        let mut edge = EdgeConfig::default();
+        edge.default_supernode = "203.0.113.10:7777".to_string();
+        edge.save(&path).unwrap();
+
+        let mut supernode = SupernodeConfig::default();
+        supernode.listen_port = 9000;
+        supernode.save(&path).unwrap();
+
+        let content = fs::read_to_string(&path).unwrap();
+        assert!(content.contains("[edge]"));
+        assert!(content.contains("[supernode]"));
+
+        let loaded_edge = EdgeConfig::load(&path).unwrap();
+        let loaded_supernode = SupernodeConfig::load(&path).unwrap();
+        assert_eq!(loaded_edge.default_supernode, "203.0.113.10:7777");
+        assert_eq!(loaded_supernode.listen_port, 9000);
+    }
+
+    #[test]
+    fn edge_save_preserves_existing_supernode_section() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("config.toml");
+
+        let mut supernode = SupernodeConfig::default();
+        supernode.management_bind = "127.0.0.1:9001".to_string();
+        supernode.save(&path).unwrap();
+
+        let mut edge = EdgeConfig::default();
+        edge.default_tun_name = "r2n-test".to_string();
+        edge.save(&path).unwrap();
+
+        let loaded_supernode = SupernodeConfig::load(&path).unwrap();
+        assert_eq!(loaded_supernode.management_bind, "127.0.0.1:9001");
     }
 }

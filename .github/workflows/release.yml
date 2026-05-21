@@ -15,64 +15,129 @@ env:
 
 jobs:
   build:
-    name: Build ${{ matrix.name }}
+    name: Build ${{ matrix.asset_name }}
     runs-on: ${{ matrix.runs_on }}
+    continue-on-error: ${{ matrix.optional || false }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - name: linux-x64
+          - asset_name: r2n-cli-linux-amd64
             runs_on: ubuntu-24.04
             target: x86_64-unknown-linux-gnu
-            archive_suffix: linux-x64.tar.gz
-            archive_format: tar.gz
-            client_binary: r2n-cli-bin
-            server_binary: supernode
-            android: false
-          - name: linux-arm64
-            runs_on: ubuntu-24.04-arm
-            target: aarch64-unknown-linux-gnu
-            archive_suffix: linux-arm64.tar.gz
-            archive_format: tar.gz
-            client_binary: r2n-cli-bin
-            server_binary: supernode
-            android: false
-          - name: windows-x64
+            package: r2n-cli-bin
+            output_binary: r2n-cli-bin
+            optional: false
+          - asset_name: supernode-linux-amd64
+            runs_on: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+            package: supernode
+            output_binary: supernode
+            optional: false
+          - asset_name: r2n-cli-linux-x86
+            runs_on: ubuntu-24.04
+            target: i686-unknown-linux-gnu
+            package: r2n-cli-bin
+            output_binary: r2n-cli-bin
+            optional: false
+          - asset_name: supernode-linux-x86
+            runs_on: ubuntu-24.04
+            target: i686-unknown-linux-gnu
+            package: supernode
+            output_binary: supernode
+            optional: false
+          - asset_name: r2n-cli-windows-x86_64.exe
             runs_on: windows-2022
             target: x86_64-pc-windows-msvc
-            archive_suffix: windows-x64.zip
-            archive_format: zip
-            client_binary: r2n-cli-bin.exe
-            server_binary: supernode.exe
-            android: false
-          - name: macos-arm64
+            package: r2n-cli-bin
+            output_binary: r2n-cli-bin.exe
+            optional: false
+          - asset_name: supernode-windows-x86_64.exe
+            runs_on: windows-2022
+            target: x86_64-pc-windows-msvc
+            package: supernode
+            output_binary: supernode.exe
+            optional: false
+          - asset_name: r2n-cli-windows-x86.exe
+            runs_on: windows-2022
+            target: i686-pc-windows-msvc
+            package: r2n-cli-bin
+            output_binary: r2n-cli-bin.exe
+            optional: false
+          - asset_name: supernode-windows-x86.exe
+            runs_on: windows-2022
+            target: i686-pc-windows-msvc
+            package: supernode
+            output_binary: supernode.exe
+            optional: false
+          - asset_name: r2n-cli-windows-arm64.exe
+            runs_on: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            package: r2n-cli-bin
+            output_binary: r2n-cli-bin.exe
+            optional: false
+          - asset_name: supernode-windows-arm64.exe
+            runs_on: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            package: supernode
+            output_binary: supernode.exe
+            optional: false
+          - asset_name: r2n-cli-macos-x86_64
+            runs_on: macos-15-intel
+            target: x86_64-apple-darwin
+            package: r2n-cli-bin
+            output_binary: r2n-cli-bin
+            optional: false
+          - asset_name: supernode-macos-x86_64
+            runs_on: macos-15-intel
+            target: x86_64-apple-darwin
+            package: supernode
+            output_binary: supernode
+            optional: false
+          - asset_name: r2n-cli-macos-arm64
             runs_on: macos-14
             target: aarch64-apple-darwin
-            archive_suffix: macos-arm64.tar.gz
-            archive_format: tar.gz
-            client_binary: r2n-cli-bin
-            server_binary: supernode
-            android: false
-          - name: macos-x64
-            runs_on: macos-13
-            target: x86_64-apple-darwin
-            archive_suffix: macos-x64.tar.gz
-            archive_format: tar.gz
-            client_binary: r2n-cli-bin
-            server_binary: supernode
-            android: false
-          - name: android-arm64
+            package: r2n-cli-bin
+            output_binary: r2n-cli-bin
+            optional: false
+          - asset_name: supernode-macos-arm64
+            runs_on: macos-14
+            target: aarch64-apple-darwin
+            package: supernode
+            output_binary: supernode
+            optional: false
+          - asset_name: r2n-cli-android-arm64
             runs_on: ubuntu-24.04
             target: aarch64-linux-android
-            archive_suffix: android-arm64.tar.gz
-            archive_format: tar.gz
-            client_binary: r2n-cli-bin
-            server_binary: ""
-            android: true
+            package: r2n-cli-bin
+            output_binary: r2n-cli-bin
+            android_linker: aarch64-linux-android21-clang
+            optional: false
+          - asset_name: r2n-cli-android-armv7
+            runs_on: ubuntu-24.04
+            target: armv7-linux-androideabi
+            package: r2n-cli-bin
+            output_binary: r2n-cli-bin
+            android_linker: armv7a-linux-androideabi21-clang
+            optional: false
+          - asset_name: r2n-cli-android-x86
+            runs_on: ubuntu-24.04
+            target: i686-linux-android
+            package: r2n-cli-bin
+            output_binary: r2n-cli-bin
+            android_linker: i686-linux-android21-clang
+            optional: false
+          - asset_name: r2n-cli-android-x86_64
+            runs_on: ubuntu-24.04
+            target: x86_64-linux-android
+            package: r2n-cli-bin
+            output_binary: r2n-cli-bin
+            android_linker: x86_64-linux-android21-clang
+            optional: false
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -82,10 +147,18 @@ jobs:
       - name: Cache Rust artifacts
         uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.target }}
+          key: ${{ matrix.target }}-${{ matrix.package }}
+
+      - name: Install Linux 32-bit toolchain
+        if: runner.os == 'Linux' && startsWith(matrix.target, 'i686-unknown-linux-gnu')
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y gcc-multilib
 
       - name: Configure Android toolchain
-        if: matrix.android
+        if: startsWith(matrix.target, 'aarch64-linux-android') || startsWith(matrix.target, 'armv7-linux-androideabi') || startsWith(matrix.target, 'i686-linux-android') || startsWith(matrix.target, 'x86_64-linux-android')
         shell: bash
         run: |
           set -euo pipefail
@@ -95,60 +168,41 @@ jobs:
             exit 1
           fi
           TOOLCHAIN_BIN="${NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          if [ ! -x "${TOOLCHAIN_BIN}/aarch64-linux-android21-clang" ]; then
-            echo "Android clang linker not found under ${TOOLCHAIN_BIN}" >&2
+          LINKER="${TOOLCHAIN_BIN}/${{ matrix.android_linker }}"
+          if [ ! -x "${LINKER}" ]; then
+            echo "Android linker not found: ${LINKER}" >&2
             exit 1
           fi
+          TARGET_ENV_NAME="$(echo '${{ matrix.target }}' | tr '[:lower:]-' '[:upper:]_')"
           {
             echo "ANDROID_NDK_ROOT=${NDK_ROOT}"
-            echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=${TOOLCHAIN_BIN}/aarch64-linux-android21-clang"
-            echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_AR=${TOOLCHAIN_BIN}/llvm-ar"
+            echo "CARGO_TARGET_${TARGET_ENV_NAME}_LINKER=${LINKER}"
+            echo "CARGO_TARGET_${TARGET_ENV_NAME}_AR=${TOOLCHAIN_BIN}/llvm-ar"
           } >> "${GITHUB_ENV}"
 
-      - name: Build desktop/server artifacts
-        if: ${{ !matrix.android }}
-        run: cargo build --release -p r2n-cli-bin -p supernode --target ${{ matrix.target }}
+      - name: Build artifact
+        run: cargo build --release -p ${{ matrix.package }} --target ${{ matrix.target }}
 
-      - name: Build Android artifacts
-        if: matrix.android
-        run: cargo build --release -p r2n-cli-bin --target ${{ matrix.target }}
-
-      - name: Package unix artifacts
-        if: ${{ !matrix.android && matrix.archive_format == 'tar.gz' }}
+      - name: Stage artifact (Unix)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           set -euo pipefail
-          PKG_DIR="dist/${{ matrix.name }}"
-          mkdir -p "${PKG_DIR}"
-          cp "target/${{ matrix.target }}/release/${{ matrix.client_binary }}" "${PKG_DIR}/r2n-cli"
-          cp "target/${{ matrix.target }}/release/${{ matrix.server_binary }}" "${PKG_DIR}/supernode"
-          tar -C dist -czf "dist/r2n-${GITHUB_REF_NAME}-${{ matrix.archive_suffix }}" "${{ matrix.name }}"
+          mkdir -p dist
+          cp "target/${{ matrix.target }}/release/${{ matrix.output_binary }}" "dist/${{ matrix.asset_name }}"
 
-      - name: Package Windows artifacts
-        if: ${{ !matrix.android && matrix.archive_format == 'zip' }}
+      - name: Stage artifact (Windows)
+        if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $pkgDir = "dist/${{ matrix.name }}"
-          New-Item -ItemType Directory -Force -Path $pkgDir | Out-Null
-          Copy-Item "target/${{ matrix.target }}/release/${{ matrix.client_binary }}" "$pkgDir/r2n-cli.exe"
-          Copy-Item "target/${{ matrix.target }}/release/${{ matrix.server_binary }}" "$pkgDir/supernode.exe"
-          Compress-Archive -Path "$pkgDir/*" -DestinationPath "dist/r2n-${env:GITHUB_REF_NAME}-${{ matrix.archive_suffix }}" -Force
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item "target/${{ matrix.target }}/release/${{ matrix.output_binary }}" "dist/${{ matrix.asset_name }}"
 
-      - name: Package Android artifacts
-        if: matrix.android
-        shell: bash
-        run: |
-          set -euo pipefail
-          PKG_DIR="dist/${{ matrix.name }}"
-          mkdir -p "${PKG_DIR}"
-          cp "target/${{ matrix.target }}/release/r2n-cli-bin" "${PKG_DIR}/r2n-cli-android-arm64"
-          tar -C dist -czf "dist/r2n-${GITHUB_REF_NAME}-${{ matrix.archive_suffix }}" "${{ matrix.name }}"
-
-      - name: Upload packaged artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.name }}
-          path: dist/r2n-${{ github.ref_name }}-${{ matrix.archive_suffix }}
+          name: ${{ matrix.asset_name }}
+          path: dist/${{ matrix.asset_name }}
           if-no-files-found: error
 
   publish:
@@ -158,8 +212,8 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Download packaged artifacts
-        uses: actions/download-artifact@v4
+      - name: Download built artifacts
+        uses: actions/download-artifact@v5
         with:
           path: dist
 
