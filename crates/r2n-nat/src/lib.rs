@@ -5,6 +5,7 @@ use if_addrs::get_if_addrs;
 use r2n_common::NatType;
 use r2n_proto::{Candidate, CandidateKind, CandidateSource};
 use r2n_transport::UdpTransport;
+use std::cmp::Reverse;
 use std::net::SocketAddr;
 use std::time::Duration;
 
@@ -145,7 +146,7 @@ impl<'a> NatProbe<'a> {
             }
         }
 
-        candidates.sort_by(|left, right| right.priority.cmp(&left.priority));
+        candidates.sort_by_key(|candidate| Reverse(candidate.priority));
         candidates.dedup_by(|left, right| left.addr == right.addr && left.kind == right.kind);
         Ok((fingerprint, candidates))
     }
@@ -165,7 +166,7 @@ pub fn merge_mapped_candidate(
         candidates.push(candidate);
     }
 
-    candidates.sort_by(|left, right| right.priority.cmp(&left.priority));
+    candidates.sort_by_key(|candidate| Reverse(candidate.priority));
     candidates.dedup_by(|left, right| left.addr == right.addr && left.kind == right.kind);
     candidates
 }
