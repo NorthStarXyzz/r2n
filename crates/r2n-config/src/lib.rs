@@ -481,8 +481,8 @@ fn default_config_path() -> Option<PathBuf> {
 }
 
 fn load_shared_config(path: &PathBuf) -> Result<SharedConfigFile> {
-    let content =
-        fs::read_to_string(path).with_context(|| format!("Failed to read config file at {:?}", path))?;
+    let content = fs::read_to_string(path)
+        .with_context(|| format!("Failed to read config file at {:?}", path))?;
     parse_shared_config_content(path, &content)
 }
 
