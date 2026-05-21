@@ -239,17 +239,17 @@ jobs:
           set -euo pipefail
           cd release-assets
           mapfile -t files < <(find . -maxdepth 1 -type f | sort)
-          prerelease_flag=""
+          extra_flags=()
           if [[ "${GITHUB_REF_NAME}" =~ ^v0\. ]]; then
-            prerelease_flag="--prerelease"
+            extra_flags+=(--prerelease)
           elif [[ "${GITHUB_REF_NAME}" == *-* ]]; then
-            prerelease_flag="--prerelease"
+            extra_flags+=(--prerelease)
           fi
-          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+          if gh release view "${GITHUB_REF_NAME}" > /dev/null 2>&1; then
             gh release upload "${GITHUB_REF_NAME}" "${files[@]}" --clobber
           else
             gh release create "${GITHUB_REF_NAME}" "${files[@]}" \
               --title "${GITHUB_REF_NAME}" \
               --generate-notes \
-              ${prerelease_flag}
+              "${extra_flags[@]}"
           fi
