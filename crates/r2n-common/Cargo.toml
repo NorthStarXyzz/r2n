@@ -1,0 +1,13 @@
+[package]
+name = "r2n-common"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+hex = "0.4"
+base64 = "0.21"
+postcard = { version = "1.0", features = ["use-std"] }
+ed25519-dalek = "2.0"
+rand = "0.8"
+serde-big-array = "0.5"

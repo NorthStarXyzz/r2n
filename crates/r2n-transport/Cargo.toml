@@ -1,0 +1,15 @@
+[package]
+name = "r2n-transport"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+r2n-common = { path = "../r2n-common" }
+r2n-proto = { path = "../r2n-proto" }
+tokio = { version = "1.0", features = ["full"] }
+postcard = { version = "1.0", features = ["use-std"] }
+thiserror = "1.0"
+log = "0.4"
+futures-util = "0.3"
+stun-rs = "0.1"
+libc = "0.2"

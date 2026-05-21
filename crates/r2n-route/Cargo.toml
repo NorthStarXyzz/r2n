@@ -1,0 +1,14 @@
+[package]
+name = "r2n-route"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1.0", features = ["full"] }
+thiserror = "1.0"
+log = "0.4"
+ipnet = "2.3"
+libc = "0.2"
+
+[target.'cfg(not(target_os = "android"))'.dependencies]
+net-route = "0.4"

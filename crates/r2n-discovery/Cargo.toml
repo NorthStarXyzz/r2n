@@ -1,0 +1,15 @@
+[package]
+name = "r2n-discovery"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+r2n-common = { path = "../r2n-common" }
+r2n-proto = { path = "../r2n-proto" }
+etherparse = "0.13"
+log = "0.4"
+thiserror = "1.0"
+ratelimit = "0.9"
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8"

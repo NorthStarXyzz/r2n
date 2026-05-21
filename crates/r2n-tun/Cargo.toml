@@ -1,0 +1,15 @@
+[package]
+name = "r2n-tun"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tun-rs = { version = "2", features = ["async"] }
+tokio = { version = "1", features = ["full"] }
+thiserror = "1.0"
+async-trait = "0.1"
+log = "0.4"
+libc = "0.2"
+
+[target."cfg(windows)".dependencies]
+wintun = "0.5.1"

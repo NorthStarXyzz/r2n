@@ -1,0 +1,12 @@
+[package]
+name = "supernode"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+r2n-supernode-lib = { path = "../../crates/r2n-supernode-lib" }
+r2n-config = { path = "../../crates/r2n-config" }
+tokio = { version = "1.0", features = ["full"] }
+anyhow = "1.0"
+env_logger = "0.10"
+log = "0.4"

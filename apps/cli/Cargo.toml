@@ -1,0 +1,9 @@
+[package]
+name = "r2n-cli-bin"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+r2n-cli = { path = "../../crates/r2n-cli" }
+tokio = { version = "1.0", features = ["full"] }
+anyhow = "1.0"

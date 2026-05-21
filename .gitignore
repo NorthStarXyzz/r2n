@@ -1,0 +1,9 @@
+/target
+*.dmg
+.DS_Store
+r2n-supernode-linux-amd64
+*.exe
+*.zip
+/dist
+r2n-cli-bin
+release_bin/

@@ -1,0 +1,23 @@
+[package]
+name = "r2n-dataplane"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+r2n-common = { path = "../r2n-common" }
+r2n-proto = { path = "../r2n-proto" }
+r2n-transport = { path = "../r2n-transport" }
+r2n-tun = { path = "../r2n-tun" }
+r2n-discovery = { path = "../r2n-discovery" }
+r2n-crypto = { path = "../r2n-crypto" }
+r2n-observability = { path = "../r2n-observability" }
+r2n-policy = { path = "../r2n-policy" }
+r2n-qos = { path = "../r2n-qos" }
+r2n-slab = { path = "../r2n-slab" }
+dashmap = "5.0"
+parking_lot = "0.12"
+tokio = { version = "1.0", features = ["full"] }
+anyhow = "1.0"
+etherparse = "0.13"
+log = "0.4"
+serde = { version = "1.0", features = ["derive"] }

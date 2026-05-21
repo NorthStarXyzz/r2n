@@ -1,0 +1,8 @@
+[package]
+name = "r2n-rendezvous"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+r2n-common = { path = "../r2n-common" }
+r2n-proto = { path = "../r2n-proto" }

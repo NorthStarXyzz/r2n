@@ -1,0 +1,15 @@
+[package]
+name = "r2n-config"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.102"
+dirs = "6.0.0"
+hex = "0.4.3"
+r2n-common = { version = "0.1.0", path = "../r2n-common" }
+r2n-discovery = { version = "0.1.0", path = "../r2n-discovery" }
+r2n-policy = { version = "0.1.0", path = "../r2n-policy" }
+rand = "0.10.1"
+serde = { version = "1.0.228", features = ["derive"] }
+toml = "1.1.2"

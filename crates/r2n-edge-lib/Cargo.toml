@@ -1,0 +1,38 @@
+[package]
+name = "r2n-edge-lib"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+r2n-common = { path = "../r2n-common" }
+r2n-proto = { path = "../r2n-proto" }
+r2n-transport = { path = "../r2n-transport" }
+r2n-tun = { path = "../r2n-tun" }
+r2n-route = { path = "../r2n-route" }
+r2n-discovery = { path = "../r2n-discovery" }
+r2n-crypto = { path = "../r2n-crypto" }
+r2n-dataplane = { path = "../r2n-dataplane" }
+r2n-nat = { path = "../r2n-nat" }
+r2n-observability = { path = "../r2n-observability" }
+r2n-policy = { path = "../r2n-policy" }
+r2n-rendezvous = { path = "../r2n-rendezvous" }
+r2n-config = { path = "../r2n-config" }
+dashmap = "5.0"
+parking_lot = "0.12"
+tokio = { version = "1.0", features = ["full"] }
+log = "0.4"
+anyhow = "1.0"
+thiserror = "1.0"
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+rand = "0.8"
+etherparse = "0.13"
+ipnet = "2.3"
+netdev = "0.31"
+futures = "0.3.32"
+dirs = "6.0.0"
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[dev-dependencies]
+tempfile = "3.8"

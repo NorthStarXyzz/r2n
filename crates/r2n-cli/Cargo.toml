@@ -1,0 +1,17 @@
+[package]
+name = "r2n-cli"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.0", features = ["derive"] }
+r2n-common = { path = "../r2n-common" }
+r2n-edge-lib = { path = "../r2n-edge-lib" }
+r2n-policy = { path = "../r2n-policy" }
+tokio = { version = "1.0", features = ["full"] }
+anyhow = "1.0"
+log = "0.4"
+env_logger = "0.10"
+serde_json = "1.0"
+rand = "0.8"
+r2n-config = { version = "0.1.0", path = "../r2n-config" }

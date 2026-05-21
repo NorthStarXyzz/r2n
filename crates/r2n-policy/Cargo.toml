@@ -1,0 +1,10 @@
+[package]
+name = "r2n-policy"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+etherparse = "0.13"
+ipnet = { version = "2.3", features = ["serde"] }
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "1.0"

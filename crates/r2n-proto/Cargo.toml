@@ -1,0 +1,10 @@
+[package]
+name = "r2n-proto"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+r2n-common = { path = "../r2n-common" }
+serde = { version = "1.0", features = ["derive"] }
+postcard = { version = "1.0", features = ["alloc", "use-std"] }
+thiserror = "1.0"
