@@ -1722,7 +1722,7 @@ pub fn load_history() -> Vec<HistoryItem> {
 }
 
 pub fn save_history(mut history: Vec<HistoryItem>) {
-    history.sort_by(|a, b| b.last_joined.cmp(&a.last_joined));
+    history.sort_by_key(|item| std::cmp::Reverse(item.last_joined));
     history.truncate(20);
     let Some(path) = get_history_path() else {
         return;
