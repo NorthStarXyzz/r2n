@@ -609,12 +609,16 @@ mod tests {
         let dir = tempdir().unwrap();
         let path = dir.path().join("config.toml");
 
-        let mut edge = EdgeConfig::default();
-        edge.default_supernode = "203.0.113.10:7777".to_string();
+        let edge = EdgeConfig {
+            default_supernode: "203.0.113.10:7777".to_string(),
+            ..EdgeConfig::default()
+        };
         edge.save(&path).unwrap();
 
-        let mut supernode = SupernodeConfig::default();
-        supernode.listen_port = 9000;
+        let supernode = SupernodeConfig {
+            listen_port: 9000,
+            ..SupernodeConfig::default()
+        };
         supernode.save(&path).unwrap();
 
         let content = fs::read_to_string(&path).unwrap();
@@ -632,12 +636,16 @@ mod tests {
         let dir = tempdir().unwrap();
         let path = dir.path().join("config.toml");
 
-        let mut supernode = SupernodeConfig::default();
-        supernode.management_bind = "127.0.0.1:9001".to_string();
+        let supernode = SupernodeConfig {
+            management_bind: "127.0.0.1:9001".to_string(),
+            ..SupernodeConfig::default()
+        };
         supernode.save(&path).unwrap();
 
-        let mut edge = EdgeConfig::default();
-        edge.default_tun_name = "r2n-test".to_string();
+        let edge = EdgeConfig {
+            default_tun_name: "r2n-test".to_string(),
+            ..EdgeConfig::default()
+        };
         edge.save(&path).unwrap();
 
         let loaded_supernode = SupernodeConfig::load(&path).unwrap();
