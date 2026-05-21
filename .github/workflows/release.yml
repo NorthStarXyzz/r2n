@@ -34,13 +34,13 @@ jobs:
             package: supernode
             output_binary: supernode
             optional: false
-          - asset_name: r2n-cli-linux-x86
+          - asset_name: r2n-cli-linux-i386
             runs_on: ubuntu-24.04
             target: i686-unknown-linux-gnu
             package: r2n-cli-bin
             output_binary: r2n-cli-bin
             optional: false
-          - asset_name: supernode-linux-x86
+          - asset_name: supernode-linux-i386
             runs_on: ubuntu-24.04
             target: i686-unknown-linux-gnu
             package: supernode
